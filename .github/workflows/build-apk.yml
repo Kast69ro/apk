@@ -37,7 +37,6 @@ jobs:
 
       # иконка приложения из логотипа (все mipmap-плотности)
       - name: App icon
-              - name: App icon
         run: |
           sudo apt-get update && sudo apt-get install -y imagemagick
           for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
