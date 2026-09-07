@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #24262A; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  a { color: #0E8F6F; text-decoration: none; }
+  a:hover { color: #0B7259; }
+  @keyframes mSpin { to { transform: rotate(360deg); } }
+  @keyframes mFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div style="width: 1560px; padding: 48px; display: flex; flex-direction: column; gap: 48px; align-items: center; background: #24262A; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+
+  <div style="width: 1464px; display: flex; gap: 22px; align-items: center; padding-bottom: 4px; border-bottom: 1px solid #34383D;">
+    <div style="font-size: 26px; font-weight: 600; color: #FFFFFF; letter-spacing: -0.01em;">Каналы мерчанта</div>
+    <div style="font-size: 15px; color: #8E9399;">пять способов доставки платежа и статуса</div>
+    <div style="flex: 1;"></div>
+    <div style="font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">один бэкенд · Единый QR · терминал {{ terminal }}</div>
+  </div>
+
+  <div style="width: 1464px; display: flex; gap: 22px; align-items: flex-start;">
+
+  <div style="display: flex; flex-direction: column; gap: 20px; padding-top: 8px; width: 300px; flex: 0 0 300px; color: #C8CCD1;">
+    <div style="font-size: 22px; font-weight: 600; color: #FFFFFF; letter-spacing: -0.01em;">1 · Приложение мерчанта</div>
+    <div style="font-size: 15px; line-height: 1.55; color: #8E9399; text-wrap: pretty;">Вход по номеру, QR точки, статистика дня, история со свайпом вниз. Рядом — Telegram-бот: статусы приходят push-ом с бэка, запрашивать не нужно.</div>
+    <div style="height: 1px; background: #34383D;"></div>
+    <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+      <div onClick="{{ s.go }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; cursor: pointer; user-select: none; background: {{ s.bg }}; border: 1px solid {{ s.border }};">
+        <div style="width: 26px; height: 26px; flex: 0 0 26px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-family: 'IBM Plex Mono', monospace; background: {{ s.dotBg }}; color: {{ s.dotFg }};">{{ s.n }}</div>
+        <div style="font-size: 15px; color: {{ s.fg }};">{{ s.label }}</div>
+      </div>
+    </sc-for>
+    <div style="font-size: 13px; line-height: 1.6; color: #6B7075; font-family: 'IBM Plex Mono', monospace; text-wrap: pretty;">демо: номер из 9 цифр, код 0000 — «не мерчант», любой другой — вход</div>
+    <div style="height: 1px; background: #34383D;"></div>
+    <div style="font-size: 15px; font-weight: 600; color: #FFFFFF;">2 · Telegram-бот</div>
+    <div style="font-size: 14px; line-height: 1.55; color: #8E9399; text-wrap: pretty;">Бэкенд сам пишет боту при пополнении. Кнопка ↑ в чате имитирует входящий платёж — он появится и в приложении, и на сайте, и в SMS.</div>
+  </div>
+
+  <div style="width: 390px; flex: 0 0 390px; height: 844px; position: relative; border-radius: 44px; background: {{ shellBg }}; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,.45), 0 0 0 10px #16181A, 0 0 0 11px #3A3E43; color: #16181A; display: flex; flex-direction: column;">
+
+    <div style="height: 54px; flex: 0 0 54px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 600; color: {{ statusFg }}; font-family: 'IBM Plex Mono', monospace;">
+      <div>{{ clock }}</div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="width: 18px; height: 10px; border: 1.5px solid {{ statusFg }}; border-radius: 2px;"></div>
+        <div style="width: 24px; height: 11px; border: 1.5px solid {{ statusFg }}; border-radius: 3px; position: relative;"></div>
+      </div>
+    </div>
+
+    <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ true }}">
+      <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 24px 28px 0;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="assets/activ-logo.png" alt="ActivBank" style="width: 44px; height: 42px; object-fit: contain; display: block;" />
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <div style="font-size: 17px; font-weight: 600; letter-spacing: -0.01em;">{{ bankName }}</div>
+            <div style="font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">кабинет мерчанта</div>
+          </div>
+        </div>
+        <div style="margin-top: 28px; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; text-wrap: pretty;">{{ authTitle }}</div>
+        <div style="margin-top: 10px; font-size: 16px; line-height: 1.5; color: #6B7075; text-wrap: pretty;">{{ authSub }}</div>
+
+        <sc-if value="{{ isPhone }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top: 32px; height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 18px; border-radius: 16px; border: 1.5px solid {{ fieldBorder }}; background: #FFFFFF;">
+            <div style="font-size: 22px; font-family: 'IBM Plex Mono', monospace; color: #6B7075;">{{ dialCode }}</div>
+            <div style="font-size: 22px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.02em;">{{ phoneMask }}</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isCode }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 32px; display: flex; gap: 12px;">
+            <sc-for list="{{ codeCells }}" as="c" hint-placeholder-count="4">
+              <div style="flex: 1; height: 68px; border-radius: 16px; border: 1.5px solid {{ c.border }}; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;">{{ c.ch }}</div>
+            </sc-for>
+          </div>
+          <div style="margin-top: 16px; display: flex; align-items: center; justify-content: space-between; font-size: 15px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">
+            <div>{{ resendStr }}</div>
+            <div onClick="{{ editPhone }}" style="color: {{ brand }}; cursor: pointer;">изменить номер</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ authError }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 20px; padding: 16px 18px; border-radius: 14px; background: #FDECEA; display: flex; flex-direction: column; gap: 6px; animation: mFade .25s ease-out;">
+            <div style="font-size: 16px; font-weight: 600; color: #B3352F;">Номер не найден</div>
+            <div style="font-size: 15px; line-height: 1.45; color: #8C4340; text-wrap: pretty;">Этот номер не привязан ни к одному мерчанту. Обратитесь к вашему менеджеру в банке.</div>
+          </div>
+        </sc-if>
+
+        <div style="flex: 1;"></div>
+
+        <div onClick="{{ authNext }}" style="height: 60px; margin-bottom: 12px; border-radius: {{ btnRadius }}; background: {{ authBtnBg }}; color: {{ authBtnFg }}; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; font-weight: 600; cursor: pointer; user-select: none;">
+          <sc-if value="{{ authLoading }}" hint-placeholder-val="{{ false }}">
+            <div style="width: 20px; height: 20px; border-radius: 10px; border: 2px solid rgba(255,255,255,.35); border-top-color: #FFFFFF; animation: mSpin .8s linear infinite;"></div>
+          </sc-if>
+          {{ authBtnLabel }}
+        </div>
+
+        <div style="flex: 0 0 auto; padding-bottom: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+          <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+            <div onClick="{{ k.press }}" style="height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: {{ k.bg }}; font-size: 24px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; color: #16181A; cursor: pointer; user-select: none;" style-active="background: #E4E4DF;">{{ k.label }}</div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+      <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 8px 22px 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+            <div style="font-size: 22px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ merchant }}</div>
+            <div style="font-size: 14px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ merchantId }}</div>
+          </div>
+          <img src="assets/activ-logo.png" alt="ActivBank" style="width: 38px; height: 36px; flex: 0 0 38px; object-fit: contain; display: block;" />
+        </div>
+
+        <div style="margin-top: 20px; padding: 22px; border-radius: 22px; background: #FFFFFF; border: 1px solid #E7E7E2; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+          <div style="font-size: 15px; color: #6B7075;">Покажите QR покупателю</div>
+          <div style="width: 216px; height: 216px; padding: 10px; background: #FFFFFF; border-radius: 12px; display: grid; grid-template-columns: repeat(25, 1fr); grid-template-rows: repeat(25, 1fr);">
+            <sc-for list="{{ qr }}" as="q" hint-placeholder-count="0">
+              <div style="background: {{ q.c }};"></div>
+            </sc-for>
+          </div>
+          <div style="font-size: 14px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ qrPayload }}</div>
+        </div>
+
+        <div style="margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="padding: 18px; border-radius: 18px; background: #FFFFFF; border: 1px solid #E7E7E2; display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 14px; color: #6B7075;">Сумма за сегодня</div>
+            <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-family: 'IBM Plex Mono', monospace;">{{ todaySum }}</div>
+          </div>
+          <div style="padding: 18px; border-radius: 18px; background: #FFFFFF; border: 1px solid #E7E7E2; display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 14px; color: #6B7075;">Платежей</div>
+            <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-family: 'IBM Plex Mono', monospace;">{{ todayCount }}</div>
+          </div>
+        </div>
+
+        <div onClick="{{ goHistory }}" style="margin-top: 12px; padding: 18px 20px; border-radius: 18px; background: #FFFFFF; border: 1px solid #E7E7E2; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none;" style-active="background: #F4F4F2;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: 17px; font-weight: 500;">Последний платёж</div>
+            <div style="font-size: 14px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ lastPayStr }}</div>
+          </div>
+          <div style="font-size: 20px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; color: {{ brand }};">{{ lastPaySum }}</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+      <div onPointerDown="{{ pullDown }}" onPointerMove="{{ pullMove }}" onPointerUp="{{ pullUp }}" onPointerCancel="{{ pullUp }}" ref="{{ scrollRef }}" style="flex: 1; min-height: 0; overflow-y: auto; padding: 0 22px 24px; touch-action: pan-y;">
+        <div style="height: 52px; display: flex; align-items: flex-end; padding-bottom: 6px;">
+          <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em;">История</div>
+        </div>
+        <div style="height: {{ pullH }}; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: {{ pullTransition }};">
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">
+            <div style="width: 16px; height: 16px; border-radius: 8px; border: 2px solid #D8D8D2; border-top-color: {{ brand }}; animation: {{ spinAnim }};"></div>
+            {{ pullLabel }}
+          </div>
+        </div>
+        <sc-for list="{{ days }}" as="d" hint-placeholder-count="3">
+          <div style="padding-top: 18px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <div style="font-size: 15px; font-weight: 500; color: #6B7075;">{{ d.label }}</div>
+              <div style="font-size: 15px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ d.total }}</div>
+            </div>
+            <div style="border-radius: 18px; background: #FFFFFF; border: 1px solid #E7E7E2; overflow: hidden;">
+              <sc-for list="{{ d.items }}" as="p" hint-placeholder-count="4">
+                <div onClick="{{ p.open }}" style="padding: 16px 18px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid {{ p.sep }}; cursor: pointer; user-select: none;" style-active="background: #F7F7F4;">
+                  <div style="width: 34px; height: 34px; flex: 0 0 34px; border-radius: 17px; background: {{ p.dot }}; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 16px;">{{ p.icon }}</div>
+                  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+                    <div style="font-size: 16px; font-weight: 500;">{{ p.title }}</div>
+                    <div style="font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ p.meta }}</div>
+                  </div>
+                  <div style="font-size: 18px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; color: {{ p.fg }};">{{ p.sum }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showReceipt }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeReceipt }}" style="position: absolute; inset: 0; background: rgba(22,24,26,.5); display: flex; align-items: flex-end; z-index: 5;">
+        <div style="width: 100%; max-height: 88%; overflow-y: auto; background: #FFFFFF; border-top-left-radius: 26px; border-top-right-radius: 26px; padding: 14px 24px 30px; animation: mFade .22s ease-out;">
+          <div style="width: 44px; height: 4px; border-radius: 2px; background: #DDDDD7; margin: 0 auto 18px;"></div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <div style="width: 44px; height: 44px; border-radius: 22px; background: {{ rcpDot }}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 20px;">{{ rcpIcon }}</div>
+            <div style="font-size: 15px; color: #6B7075;">{{ rcpStatus }}</div>
+            <div style="font-size: 34px; font-weight: 600; letter-spacing: -0.02em; font-family: 'IBM Plex Mono', monospace;">{{ rcpSum }}</div>
+            <div style="font-size: 14px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ rcpDate }}</div>
+          </div>
+          <div style="margin-top: 22px; display: flex; flex-direction: column;">
+            <sc-for list="{{ rcpRows }}" as="r" hint-placeholder-count="6">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 13px 0; border-bottom: 1px solid #F0F0EC;">
+                <div style="font-size: 15px; color: #6B7075;">{{ r.k }}</div>
+                <div style="font-size: 15px; font-weight: 500; text-align: right; font-family: 'IBM Plex Mono', monospace;">{{ r.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top: 22px; display: flex; gap: 10px;">
+            <div style="flex: 1; height: 54px; border-radius: {{ btnRadius }}; border: 1.5px solid #E2E2DE; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; cursor: pointer; user-select: none;" style-active="background: #F4F4F2;">Скачать PDF</div>
+            <div onClick="{{ closeReceipt }}" style="flex: 1; height: 54px; border-radius: {{ btnRadius }}; background: {{ brand }}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; cursor: pointer; user-select: none;">Готово</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+      <div style="flex: 0 0 auto; padding: 10px 22px 26px; background: #FFFFFF; border-top: 1px solid #E7E7E2; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="2">
+          <div onClick="{{ t.go }}" style="height: 54px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; user-select: none; background: {{ t.bg }};">
+            <div style="width: 18px; height: 18px; border-radius: {{ t.iconR }}; border: 2px solid {{ t.fg }};"></div>
+            <div style="font-size: 12px; font-weight: 500; color: {{ t.fg }};">{{ t.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="width: 390px; flex: 0 0 390px; height: 844px; position: relative; border-radius: 44px; background: #E9EDF2; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,.45), 0 0 0 10px #16181A, 0 0 0 11px #3A3E43; display: flex; flex-direction: column; color: #16181A;">
+    <div style="flex: 0 0 auto; padding: 12px 18px 12px; background: #FFFFFF; border-bottom: 1px solid #DCE1E7; display: flex; align-items: center; gap: 12px;">
+      <div style="font-size: 22px; color: #3390EC; padding-right: 2px;">‹</div>
+      <img src="assets/activ-logo.png" alt="" style="width: 34px; height: 32px; object-fit: contain; display: block;" />
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-size: 16px; font-weight: 600;">Актив Мерчант</div>
+        <div style="font-size: 13px; color: #7A828A;">бот · онлайн</div>
+      </div>
+      <div style="font-size: 12px; color: #7A828A; font-family: 'IBM Plex Mono', monospace;">@activ_merchant_bot</div>
+    </div>
+
+    <div ref="{{ tgRef }}" style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px 14px 8px; display: flex; flex-direction: column; gap: 10px;">
+      <sc-for list="{{ tg }}" as="m" hint-placeholder-count="4">
+        <div style="display: flex; justify-content: {{ m.align }};">
+          <div style="max-width: 84%; padding: 11px 14px; border-radius: 18px; border-bottom-left-radius: {{ m.blr }}; border-bottom-right-radius: {{ m.brr }}; background: {{ m.bg }}; color: {{ m.fg }}; box-shadow: 0 1px 1px rgba(16,24,40,.06); display: flex; flex-direction: column; gap: 8px; animation: mFade .2s ease-out;">
+            <sc-if value="{{ m.hasQr }}" hint-placeholder-val="{{ false }}">
+              <div style="width: 196px; height: 196px; padding: 10px; background: #FFFFFF; border-radius: 12px; display: grid; grid-template-columns: repeat(25, 1fr); grid-template-rows: repeat(25, 1fr);">
+                <sc-for list="{{ qr }}" as="q" hint-placeholder-count="0">
+                  <div style="background: {{ q.c }};"></div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="font-size: 15px; line-height: 1.45; white-space: pre-line; text-wrap: pretty;">{{ m.text }}</div>
+            <sc-if value="{{ m.hasKeys }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 2px;">
+                <sc-for list="{{ m.keys }}" as="k" hint-placeholder-count="2">
+                  <div onClick="{{ k.press }}" style="height: 40px; border-radius: 10px; background: #F1F4F8; color: #2A6FB8; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; cursor: pointer; user-select: none;" style-active="background: #E3E9F1;">{{ k.label }}</div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="align-self: flex-end; font-size: 11px; color: {{ m.timeFg }}; font-family: 'IBM Plex Mono', monospace;">{{ m.time }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="flex: 0 0 auto; padding: 10px 12px 22px; background: #FFFFFF; border-top: 1px solid #DCE1E7; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; gap: 8px; overflow-x: auto; padding-right: 14px;">
+        <sc-for list="{{ tgMenu }}" as="c" hint-placeholder-count="3">
+          <div onClick="{{ c.press }}" style="flex: 0 0 auto; height: 38px; padding: 0 14px; border-radius: 19px; background: #F1F4F8; color: #2A6FB8; display: flex; align-items: center; font-size: 14px; font-weight: 500; cursor: pointer; user-select: none; white-space: nowrap;" style-active="background: #E3E9F1;">{{ c.label }}</div>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="flex: 1; height: 42px; border-radius: 21px; background: #F1F4F8; display: flex; align-items: center; padding: 0 16px; font-size: 15px; color: #9AA2AA;">Сообщение</div>
+        <div onClick="{{ tgIncoming }}" style="width: 42px; height: 42px; flex: 0 0 42px; border-radius: 21px; background: {{ brand }}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; user-select: none;" title="имитировать входящий платёж">↑</div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <div style="width: 1464px; display: flex; gap: 22px; align-items: flex-start;">
+
+    <div style="width: 700px; flex: 0 0 700px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; gap: 12px; color: #C8CCD1;">
+        <div style="font-size: 19px; font-weight: 600; color: #FFFFFF;">3 · Сайт для мерчантов</div>
+        <div style="font-size: 14px; color: #8E9399;">вход по логину или номеру, выгрузки, точки, сверка</div>
+      </div>
+      <div style="height: 660px; border-radius: 14px; overflow: hidden; background: #FFFFFF; box-shadow: 0 30px 60px rgba(0,0,0,.4); display: flex; flex-direction: column; color: #16181A;">
+        <div style="height: 42px; flex: 0 0 42px; background: #EDEDE9; border-bottom: 1px solid #DEDED8; display: flex; align-items: center; gap: 10px; padding: 0 14px;">
+          <div style="display: flex; gap: 7px;">
+            <div style="width: 11px; height: 11px; border-radius: 6px; background: #E0605A;"></div>
+            <div style="width: 11px; height: 11px; border-radius: 6px; background: #E3B341;"></div>
+            <div style="width: 11px; height: 11px; border-radius: 6px; background: #62B75B;"></div>
+          </div>
+          <div style="flex: 1; height: 26px; border-radius: 7px; background: #FFFFFF; border: 1px solid #DEDED8; display: flex; align-items: center; padding: 0 12px; font-size: 12px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">merchant.activbank.tj/payments</div>
+        </div>
+        <sc-if value="{{ siteLogin }}" hint-placeholder-val="{{ true }}">
+          <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; background: #FAFAF8; padding: 32px;">
+            <div style="width: 372px; display: flex; flex-direction: column; gap: 18px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="assets/activ-logo.png" alt="" style="width: 30px; height: 28px; object-fit: contain; display: block;" />
+                <div style="font-size: 15px; font-weight: 600;">{{ bankName }} · кабинет мерчанта</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                <div style="font-size: 24px; font-weight: 600; letter-spacing: -0.01em;">Вход в кабинет</div>
+                <div style="font-size: 13px; line-height: 1.5; color: #6B7075; text-wrap: pretty;">{{ siteAuthSub }}</div>
+              </div>
+
+              <div style="display: flex; padding: 4px; gap: 4px; background: #EDEDE9; border-radius: 10px;">
+                <div onClick="{{ sitePickPass }}" style="flex: 1; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; background: {{ siteTabPassBg }}; color: {{ siteTabPassFg }};">Логин и пароль</div>
+                <div onClick="{{ sitePickPhone }}" style="flex: 1; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; background: {{ siteTabPhoneBg }}; color: {{ siteTabPhoneFg }};">По номеру телефона</div>
+              </div>
+
+              <sc-if value="{{ sitePassMode }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="font-size: 12px; color: #6B7075;">Логин или e-mail</div>
+                    <input value="{{ siteLoginVal }}" onChange="{{ siteSetLogin }}" placeholder="rohat.admin" style="height: 42px; padding: 0 14px; background: #FFFFFF; border: 1px solid #E2E2DE; border-radius: 9px; font-size: 14px; font-family: 'IBM Plex Mono', monospace; color: #16181A; outline: none;" style-focus="border-color: {{ brand }};" />
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="font-size: 12px; color: #6B7075;">Пароль</div>
+                    <div style="display: flex; gap: 8px;">
+                      <input value="{{ sitePassVal }}" onChange="{{ siteSetPass }}" type="{{ sitePassType }}" placeholder="••••••••" style="flex: 1; min-width: 0; height: 42px; padding: 0 14px; background: #FFFFFF; border: 1px solid #E2E2DE; border-radius: 9px; font-size: 14px; font-family: 'IBM Plex Mono', monospace; color: #16181A; outline: none;" style-focus="border-color: {{ brand }};" />
+                      <div onClick="{{ siteTogglePass }}" style="width: 84px; flex: 0 0 84px; height: 42px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E2DE; border-radius: 9px; background: #FFFFFF; font-size: 13px; color: #6B7075; cursor: pointer; user-select: none;" style-hover="border-color: #B9B9B2;">{{ sitePassToggle }}</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                    <div onClick="{{ siteToggleRemember }}" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6B7075; cursor: pointer; user-select: none;">
+                      <div style="width: 16px; height: 16px; border-radius: 4px; border: 1px solid {{ rememberBorder }}; background: {{ rememberBg }}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 11px;">{{ rememberMark }}</div>
+                      Запомнить меня
+                    </div>
+                    <div style="font-size: 13px; color: {{ brand }}; cursor: pointer; user-select: none;">Забыли пароль?</div>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ sitePhoneStep }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <div style="font-size: 12px; color: #6B7075;">Номер телефона</div>
+                  <div style="display: flex; gap: 8px;">
+                    <div style="width: 62px; flex: 0 0 62px; height: 42px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E2DE; border-radius: 9px; background: #F7F7F4; font-size: 14px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ dialCode }}</div>
+                    <input value="{{ sitePhoneVal }}" onChange="{{ siteSetPhone }}" placeholder="92 123 45 67" style="flex: 1; min-width: 0; height: 42px; padding: 0 14px; background: #FFFFFF; border: 1px solid #E2E2DE; border-radius: 9px; font-size: 14px; font-family: 'IBM Plex Mono', monospace; color: #16181A; outline: none;" style-focus="border-color: {{ brand }};" />
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ siteCodeStep }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <div style="font-size: 12px; color: #6B7075;">Код из SMS</div>
+                  <div style="display: flex; gap: 8px;">
+                    <sc-for list="{{ siteCodeCells }}" as="c" hint-placeholder-count="4">
+                      <div style="flex: 1; height: 48px; border: 1px solid {{ c.border }}; border-radius: 9px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;">{{ c.ch }}</div>
+                    </sc-for>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 14px;">
+                    <input value="{{ siteCodeVal }}" onChange="{{ siteSetCode }}" placeholder="4 цифры" style="flex: 1; min-width: 0; height: 38px; padding: 0 12px; background: #FFFFFF; border: 1px solid #E2E2DE; border-radius: 9px; font-size: 13px; font-family: 'IBM Plex Mono', monospace; color: #16181A; outline: none;" style-focus="border-color: {{ brand }};" />
+                    <div onClick="{{ siteBackPhone }}" style="font-size: 13px; color: {{ brand }}; cursor: pointer; user-select: none; white-space: nowrap;">Изменить номер</div>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ siteErr }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 12px 14px; border-radius: 9px; background: #FDECEA; font-size: 13px; line-height: 1.45; color: #B3352F; text-wrap: pretty;">{{ siteErrText }}</div>
+              </sc-if>
+
+              <div onClick="{{ siteSubmit }}" style="height: 44px; border-radius: 9px; background: {{ siteBtnBg }}; color: {{ siteBtnFg }}; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; font-weight: 600; cursor: pointer; user-select: none;">{{ siteBtnLabel }}</div>
+              <div style="font-size: 11px; line-height: 1.5; color: #9AA0A6; font-family: 'IBM Plex Mono', monospace; text-wrap: pretty;">демо: код или пароль 0000 — ошибка, любые другие — вход</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ siteAuthed }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; min-height: 0; display: flex;">
+          <div style="width: 194px; flex: 0 0 194px; background: #FAFAF8; border-right: 1px solid #EDEDE9; padding: 18px 14px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 0 6px 16px;">
+              <img src="assets/activ-logo.png" alt="" style="width: 28px; height: 26px; object-fit: contain; display: block;" />
+              <div style="font-size: 14px; font-weight: 600;">{{ bankName }}</div>
+            </div>
+            <sc-for list="{{ siteNav }}" as="n" hint-placeholder-count="5">
+              <div onClick="{{ n.press }}" style="height: 38px; padding: 0 12px; border-radius: 9px; display: flex; align-items: center; font-size: 14px; cursor: pointer; user-select: none; background: {{ n.bg }}; color: {{ n.fg }}; font-weight: {{ n.fw }};">{{ n.label }}</div>
+            </sc-for>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ siteLogout }}" style="padding: 12px; border-radius: 10px; background: #F2F2EE; display: flex; flex-direction: column; gap: 4px; cursor: pointer; user-select: none;" style-hover="background: #EAEAE4;">
+              <div style="font-size: 13px; font-weight: 500;">{{ merchant }}</div>
+              <div style="font-size: 11px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ merchantId }} · выйти</div>
+            </div>
+          </div>
+          <div style="flex: 1; min-width: 0; padding: 22px 24px; overflow-y: auto;">
+            <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">{{ siteTitle }}</div>
+                <div style="font-size: 13px; color: #6B7075;">{{ siteSub }}</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <div style="height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid #E2E2DE; display: flex; align-items: center; font-size: 13px; color: #16181A; cursor: pointer; user-select: none;" style-hover="border-color: #B9B9B2;">Выгрузить XLSX</div>
+                <div style="height: 34px; padding: 0 14px; border-radius: 8px; background: {{ brand }}; color: #FFFFFF; display: flex; align-items: center; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none;">Сверка за день</div>
+              </div>
+            </div>
+            <div style="margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <sc-for list="{{ siteKpi }}" as="k" hint-placeholder-count="3">
+                <div style="padding: 14px 16px; border: 1px solid #EDEDE9; border-radius: 12px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="font-size: 12px; color: #6B7075;">{{ k.label }}</div>
+                  <div style="font-size: 21px; font-weight: 600; letter-spacing: -0.01em; font-family: 'IBM Plex Mono', monospace;">{{ k.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top: 18px; border: 1px solid #EDEDE9; border-radius: 12px; overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 1fr 1.3fr 1fr 0.9fr; gap: 10px; padding: 11px 16px; background: #FAFAF8; border-bottom: 1px solid #EDEDE9; font-size: 12px; color: #6B7075;">
+                <div>Операция</div>
+                <div>Банк плательщика</div>
+                <div>Время</div>
+                <div style="text-align: right;">Сумма</div>
+              </div>
+              <sc-for list="{{ siteRows }}" as="r" hint-placeholder-count="6">
+                <div style="display: grid; grid-template-columns: 1fr 1.3fr 1fr 0.9fr; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #F4F4F0; font-size: 13px;">
+                  <div style="font-family: 'IBM Plex Mono', monospace;">№{{ r.op }}</div>
+                  <div>{{ r.bank }}</div>
+                  <div style="display: flex; align-items: center; gap: 8px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">
+                    <div style="width: 7px; height: 7px; border-radius: 4px; background: {{ r.dot }};"></div>
+                    {{ r.time }}
+                  </div>
+                  <div style="text-align: right; font-weight: 600; font-family: 'IBM Plex Mono', monospace; color: {{ r.fg }};">{{ r.sum }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+    </div>
+
+    <div style="width: 380px; flex: 0 0 380px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="font-size: 19px; font-weight: 600; color: #FFFFFF;">4 · APK для POS-терминала</div>
+        <div style="font-size: 14px; color: #8E9399;">кассир вводит сумму — терминал показывает QR</div>
+      </div>
+      <div style="height: 660px; border-radius: 20px; background: #16181A; padding: 14px; box-shadow: 0 30px 60px rgba(0,0,0,.4); display: flex; flex-direction: column;">
+        <div style="flex: 1; min-height: 0; border-radius: 10px; background: #F4F4F2; color: #16181A; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex: 0 0 auto; padding: 12px 16px; background: #FFFFFF; border-bottom: 1px solid #E7E7E2; display: flex; align-items: center; gap: 10px;">
+            <img src="assets/activ-logo.png" alt="" style="width: 26px; height: 24px; object-fit: contain; display: block;" />
+            <div style="flex: 1; font-size: 14px; font-weight: 600;">Приём по QR</div>
+            <div style="font-size: 11px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">терм. {{ terminal }}</div>
+          </div>
+
+          <sc-if value="{{ posEntry }}" hint-placeholder-val="{{ true }}">
+            <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 16px;">
+              <div style="font-size: 12px; color: #6B7075;">Сумма к оплате</div>
+              <div style="margin-top: 6px; font-size: 40px; font-weight: 600; letter-spacing: -0.02em; font-family: 'IBM Plex Mono', monospace;">{{ posAmountStr }}</div>
+              <div style="flex: 1;"></div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <sc-for list="{{ posKeys }}" as="k" hint-placeholder-count="12">
+                  <div onClick="{{ k.press }}" style="height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #FFFFFF; border: 1px solid #E7E7E2; font-size: 22px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; cursor: pointer; user-select: none;" style-active="background: #EDEDE9;">{{ k.label }}</div>
+                </sc-for>
+              </div>
+              <div onClick="{{ posShow }}" style="margin-top: 10px; height: 58px; border-radius: 12px; background: {{ posBtnBg }}; color: {{ posBtnFg }}; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; cursor: pointer; user-select: none;">Показать QR</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ posWait }}" hint-placeholder-val="{{ false }}">
+            <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 16px;">
+              <div style="font-size: 26px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; letter-spacing: -0.02em;">{{ posAmountStr }}</div>
+              <div style="width: 214px; height: 214px; padding: 10px; background: #FFFFFF; border-radius: 12px; display: grid; grid-template-columns: repeat(25, 1fr); grid-template-rows: repeat(25, 1fr);">
+                <sc-for list="{{ qr }}" as="q" hint-placeholder-count="0">
+                  <div style="background: {{ q.c }};"></div>
+                </sc-for>
+              </div>
+              <div style="display: flex; align-items: center; gap: 9px; font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">
+                <div style="width: 14px; height: 14px; border-radius: 8px; border: 2px solid #DDDDD7; border-top-color: {{ brand }}; animation: mSpin .8s linear infinite;"></div>
+                ждём оплату покупателем
+              </div>
+              <div onClick="{{ posCancel }}" style="margin-top: 4px; height: 46px; padding: 0 26px; border-radius: 11px; border: 1px solid #E2E2DE; background: #FFFFFF; display: flex; align-items: center; font-size: 15px; color: #6B7075; cursor: pointer; user-select: none;">Отменить</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ posDone }}" hint-placeholder-val="{{ false }}">
+            <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; animation: mFade .25s ease-out;">
+              <div style="width: 62px; height: 62px; border-radius: 31px; background: #1F9D63; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 30px;">✓</div>
+              <div style="font-size: 18px; font-weight: 600;">Оплачено</div>
+              <div style="font-size: 30px; font-weight: 600; letter-spacing: -0.02em; font-family: 'IBM Plex Mono', monospace;">{{ posAmountStr }}</div>
+              <div style="font-size: 13px; color: #6B7075; text-align: center; line-height: 1.5; font-family: 'IBM Plex Mono', monospace; text-wrap: pretty;">{{ posDoneMeta }}</div>
+              <div onClick="{{ posReset }}" style="margin-top: 8px; height: 50px; padding: 0 28px; border-radius: 12px; background: {{ brand }}; color: #FFFFFF; display: flex; align-items: center; font-size: 16px; font-weight: 600; cursor: pointer; user-select: none;">Новая операция</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <div style="width: 340px; flex: 0 0 340px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="font-size: 19px; font-weight: 600; color: #FFFFFF;">5 · SMS через Jasmin</div>
+        <div style="font-size: 14px; color: #8E9399;">работает без интернета и без приложения</div>
+      </div>
+      <div style="height: 660px; border-radius: 26px; background: #FFFFFF; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,.4), 0 0 0 7px #16181A; display: flex; flex-direction: column; color: #16181A;">
+        <div style="flex: 0 0 auto; padding: 14px 16px 12px; border-bottom: 1px solid #ECECE7; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+          <div style="width: 34px; height: 34px; border-radius: 17px; background: #EDEDE9; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">AB</div>
+          <div style="font-size: 15px; font-weight: 600;">ACTIVBANK</div>
+          <div style="font-size: 11px; color: #9AA0A6; font-family: 'IBM Plex Mono', monospace;">SMS · Jasmin ESME</div>
+        </div>
+        <div ref="{{ smsRef }}" style="flex: 1; min-height: 0; overflow-y: auto; padding: 14px 14px 18px; display: flex; flex-direction: column; gap: 10px; background: #FBFBF9;">
+          <sc-for list="{{ sms }}" as="m" hint-placeholder-count="4">
+            <div style="max-width: 90%; padding: 11px 13px; border-radius: 16px; border-bottom-left-radius: 5px; background: #EFEFEA; display: flex; flex-direction: column; gap: 7px; animation: mFade .2s ease-out;">
+              <div style="font-size: 13px; line-height: 1.5; white-space: pre-line; font-family: 'IBM Plex Mono', monospace; text-wrap: pretty;">{{ m.text }}</div>
+              <div style="align-self: flex-end; font-size: 10px; color: #9AA0A6; font-family: 'IBM Plex Mono', monospace;">{{ m.time }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex: 0 0 auto; padding: 12px 14px 20px; border-top: 1px solid #ECECE7; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 11px; line-height: 1.5; color: #9AA0A6; text-wrap: pretty;">Сообщения отправляет бэкенд через Jasmin. Мерчант ничего не запрашивает.</div>
+          <div onClick="{{ smsSend }}" style="height: 42px; border-radius: 11px; background: {{ brand }}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; cursor: pointer; user-select: none;">Имитировать платёж</div>
+        </div>
+      </div>
+    </div>
+
+  </div></x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1560, &quot;height&quot;: 1740}, &quot;brandColor&quot;: {&quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#E31E24&quot;, &quot;options&quot;: [&quot;#E31E24&quot;, &quot;#B8161B&quot;, &quot;#111827&quot;, &quot;#0E8F6F&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Бренд&quot;}, &quot;bankName&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Актив Банк&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Бренд&quot;}, &quot;merchantName&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Кафе «Рохат»&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Мерчант&quot;}, &quot;merchantId&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;ID 40219 · ИНН 010012345&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Мерчант&quot;}, &quot;terminalCode&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;35604&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Мерчант&quot;}, &quot;qrPayload&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Единый QR · терминал 35604&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Мерчант&quot;}, &quot;currency&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;TJS&quot;, &quot;₽&quot;, &quot;₸&quot;, &quot;сом&quot;], &quot;default&quot;: &quot;TJS&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Локализация&quot;}, &quot;dialCode&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;+992&quot;, &quot;+7&quot;, &quot;+996&quot;, &quot;+998&quot;], &quot;default&quot;: &quot;+992&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Локализация&quot;}, &quot;platform&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;iOS&quot;, &quot;Android&quot;], &quot;default&quot;: &quot;iOS&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Платформа&quot;}}">
+const CUR = { "TJS": "TJS", "₽": "₽", "₸": "₸", "сом": "сом" };
+const BANKS = ["Актив", "Алиф Банк", "Актив", "Эсхата"];
+
+class Component extends DCLogic {
+  state = {
+    screen: "phone", phone: "", code: "", loading: false, error: false,
+    tab: "home", pull: 0, pulling: false, refreshing: false, resend: 42, receipt: null, tg: [],
+    posAmount: "", posStage: "entry", posOp: null, siteNav: "Платежи", smsFeed: [],
+    siteAuthed: false, sMode: "pass", sStep: "phone", sPhone: "", sCode: "",
+    sLogin: "", sPass: "", sShow: false, sRemember: true, sErr: "", sLoading: false,
+    pays: [
+      { id: 9, d: 0, t: "14:21", sum: 460.5, ok: true, bank: "Актив" },
+      { id: 8, d: 0, t: "13:58", sum: 125, ok: true, bank: "Алиф Банк" },
+      { id: 7, d: 0, t: "12:40", sum: 890.4, ok: true, bank: "Актив" },
+      { id: 6, d: 0, t: "11:02", sum: 230, ok: false, bank: "Эсхата" },
+      { id: 5, d: 1, t: "19:44", sum: 1540, ok: true, bank: "Актив" },
+      { id: 4, d: 1, t: "16:12", sum: 320.75, ok: true, bank: "Алиф Банк" },
+      { id: 3, d: 1, t: "10:35", sum: 78, ok: true, bank: "Актив" },
+      { id: 2, d: 2, t: "18:03", sum: 657.34, ok: true, bank: "Алиф Банк" },
+      { id: 1, d: 2, t: "14:47", sum: 245, ok: true, bank: "Актив" }
+    ]
+  };
+
+  scroll = React.createRef();
+  tgScroll = React.createRef();
+  smsScroll = React.createRef();
+  nextId = 10;
+
+  tgTime(offset) {
+    const base = 14 * 60 + 32 + (offset || 0);
+    return String(Math.floor(base / 60) % 24).padStart(2, "0") + ":" + String(base % 60).padStart(2, "0");
+  }
+
+  seedTg() {
+    const m = this.props.merchantName ?? "Кафе «Рохат»";
+    const term = this.props.terminalCode ?? "35604";
+    return [
+      { from: "bot", time: "14:28", text: "Салом! Я бот Актив Мерчант.\nЧтобы войти, отправьте номер телефона, привязанный к вашей точке.", keys: [{ label: "📱 Отправить номер телефона", act: "auth" }] },
+      { from: "user", time: "14:28", text: (this.props.dialCode ?? "+992") + " 92 123 45 67" },
+      { from: "bot", time: "14:29", text: "Проверяю номер в базе банка…" },
+      { from: "bot", time: "14:29", qr: true, text: m + "\nТерминал " + term + " · Единый QR-код\n\nПокажите этот QR покупателю — уведомления о платежах приходят сюда автоматически." }
+    ];
+  }
+
+  tgPush(msg) { this.setState((s) => ({ tg: s.tg.concat([msg]) }), () => this.tgToBottom()); }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (!prevState) return;
+    if ((prevState.tg || []).length !== this.state.tg.length) this.tgToBottom();
+    if ((prevState.smsFeed || []).length !== this.state.smsFeed.length) this.smsToBottom();
+  }
+
+  tgToBottom() {
+    const el = this.tgScroll.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  tgAct(act) {
+    const term = this.props.terminalCode ?? "35604";
+    const m = this.props.merchantName ?? "Кафе «Рохат»";
+    if (act === "auth") return this.tgAsk("📱 Отправить номер телефона", () => ({ text: "Номер подтверждён. Точка: " + m + ".\nВы вошли как мерчант." }));
+    if (act === "qr") return this.tgAsk("Мой QR", () => ({ qr: true, text: "Единый QR-код · терминал " + term }));
+    if (act === "today") return this.tgAsk("Итоги дня", () => {
+      const t = this.state.pays.filter((p) => p.d === 0 && p.ok);
+      return { text: "Сегодня\nПлатежей: " + t.length + "\nСумма: " + this.money(t.reduce((a, p) => a + p.sum, 0)) };
+    });
+    if (act === "history") return this.tgAsk("История", () => {
+      const rows = this.state.pays.slice(0, 5).map((p) => (p.ok ? "✅" : "⚠️") + " " + p.t + " · " + this.money(p.sum) + " · " + p.bank);
+      return { text: "Последние операции\n" + rows.join("\n") };
+    });
+    if (act === "notify") return this.tgAsk("Настройки", () => ({ text: "Уведомления о новых платежах включены. Бот пишет сюда сам, запрашивать статус вручную не нужно." }));
+  }
+
+  posKey(k) {
+    const a = this.state.posAmount;
+    if (k === "del") return this.setState({ posAmount: a.slice(0, -1) });
+    if (k === "." ) return a.indexOf(".") < 0 && a.length ? this.setState({ posAmount: a + "." }) : null;
+    const dec = a.indexOf(".");
+    if (dec >= 0 && a.length - dec > 2) return;
+    if (a.replace(".", "").length >= 7) return;
+    this.setState({ posAmount: a === "0" ? k : a + k });
+  }
+
+  posShowQr() {
+    const v = parseFloat(this.state.posAmount);
+    if (!v) return;
+    const op = 31400 + this.nextId;
+    this.setState({ posStage: "wait", posOp: op });
+    clearTimeout(this.pt);
+    this.pt = setTimeout(() => {
+      const id = this.nextId++;
+      const pay = { id: id, d: 0, t: this.tgTime(id), sum: v, ok: true, bank: BANKS[id % BANKS.length], op: op };
+      this.setState((s) => ({ posStage: "done", pays: [pay].concat(s.pays) }));
+      this.notifyAll(pay);
+    }, 2600);
+  }
+
+  smsText(pay) {
+    return "Popolnenie " + this.money(pay.sum) + "\nTerminal " + (this.props.terminalCode ?? "35604") +
+      "\nOperaciya N" + (pay.op || (31400 + pay.id)) + "\nBank: " + pay.bank + "\nStatus: uspeshno";
+  }
+
+  notifyAll(pay) {
+    this.setState((s) => ({
+      smsFeed: s.smsFeed.concat([{ time: pay.t, text: this.smsText(pay) }]),
+      tg: s.tg.concat([{
+        from: "bot", time: pay.t,
+        text: "💸 Новый платёж\n" + this.money(pay.sum) + "\nБанк плательщика: " + pay.bank + "\nОперация №" + (pay.op || (31400 + pay.id)) + " · терминал " + (this.props.terminalCode ?? "35604") + "\nСтатус: успешно",
+        keys: [{ label: "Итоги дня", act: "today" }]
+      }])
+    }), () => { this.tgToBottom(); this.smsToBottom(); });
+  }
+
+  smsToBottom() {
+    const el = this.smsScroll.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  smsSimulate() {
+    const id = this.nextId++;
+    const sums = [190, 340.6, 72, 1280, 560.25];
+    this.notifyAll({ id: id, t: this.tgTime(id), sum: sums[id % sums.length], bank: BANKS[id % BANKS.length], ok: true, d: 0 });
+    this.setState((s) => ({ pays: [{ id: id, d: 0, t: this.tgTime(id), sum: sums[id % sums.length], ok: true, bank: BANKS[id % BANKS.length] }].concat(s.pays) }));
+  }
+
+  tgIncomingPay() {
+    const id = this.nextId++;
+    const sums = [190, 340.6, 72, 1280, 560.25];
+    const pay = { id: id, d: 0, t: this.tgTime(id), sum: sums[id % sums.length], ok: true, bank: BANKS[id % BANKS.length] };
+    this.setState((s) => ({
+      pays: [pay].concat(s.pays),
+      tg: s.tg.concat([{
+        from: "bot", time: pay.t,
+        text: "💸 Новый платёж\n" + this.money(pay.sum) + "\nБанк плательщика: " + pay.bank + "\nОперация №" + (31400 + id) + " · терминал " + (this.props.terminalCode ?? "35604") + "\nСтатус: успешно",
+        keys: [{ label: "Итоги дня", act: "today" }]
+      }])
+    }), () => this.tgToBottom());
+  }
+
+  tgAsk(label, build) {
+    this.tgPush({ from: "user", time: this.tgTime(this.state.tg.length), text: label });
+    clearTimeout(this.tg2);
+    this.tg2 = setTimeout(() => this.tgPush(Object.assign({ from: "bot", time: this.tgTime(this.state.tg.length) }, build())), 650);
+  }
+
+  componentDidMount() {
+    this.setState({
+      tg: this.seedTg(),
+      smsFeed: this.state.pays.filter((p) => p.d === 0 && p.ok).slice(0, 3).reverse().map((p) => ({ time: p.t, text: this.smsText(p) }))
+    }, () => { this.tgToBottom(); this.smsToBottom(); });
+    this.tick = setInterval(() => {
+      if (this.state.screen === "code" && this.state.resend > 0) this.setState((s) => ({ resend: s.resend - 1 }));
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.tick); clearTimeout(this.t); clearTimeout(this.tg2); clearTimeout(this.pt); clearTimeout(this.st); }
+
+  siteSubmitAuth() {
+    const s = this.state;
+    if (s.sLoading) return;
+    const fail = (msg) => this.setState({ sLoading: false, sErr: msg, sPass: "", sCode: "" });
+    const ok = () => this.setState({ sLoading: false, siteAuthed: true, sErr: "" });
+    clearTimeout(this.st);
+    if (s.sMode === "pass") {
+      if (!s.sLogin.trim() || s.sPass.length < 4) return;
+      this.setState({ sLoading: true, sErr: "" });
+      this.st = setTimeout(() => (this.state.sPass === "0000"
+        ? fail("Неверный логин или пароль. Осталось 4 попытки.")
+        : ok()), 1000);
+      return;
+    }
+    if (s.sStep === "phone") {
+      if (s.sPhone.replace(/\D/g, "").length < 9) return;
+      this.setState({ sLoading: true, sErr: "" });
+      this.st = setTimeout(() => this.setState({ sLoading: false, sStep: "code", sCode: "" }), 1000);
+      return;
+    }
+    if (s.sCode.length < 4) return;
+    this.setState({ sLoading: true, sErr: "" });
+    this.st = setTimeout(() => (this.state.sCode === "0000"
+      ? fail("Неверный код. Запросите новый и попробуйте снова.")
+      : ok()), 1000);
+  }
+
+  siteVals() {
+    const s = this.state;
+    const brand = this.props.brandColor ?? "#E31E24";
+    const isPass = s.sMode === "pass";
+    const phoneStep = !isPass && s.sStep === "phone";
+    const codeStep = !isPass && s.sStep === "code";
+    const ready = isPass
+      ? (!!s.sLogin.trim() && s.sPass.length >= 4)
+      : phoneStep ? s.sPhone.replace(/\D/g, "").length >= 9 : s.sCode.length === 4;
+
+    return {
+      siteAuthed: s.siteAuthed,
+      siteLogin: !s.siteAuthed,
+      sitePassMode: isPass,
+      sitePhoneStep: phoneStep,
+      siteCodeStep: codeStep,
+      siteAuthSub: isPass
+        ? "Логин выдаёт менеджер банка при подключении точки."
+        : phoneStep ? "Укажите номер, привязанный к вашей точке — пришлём код в SMS."
+        : "Код отправлен по SMS на " + (this.props.dialCode ?? "+992") + " " + s.sPhone,
+      siteTabPassBg: isPass ? "#FFFFFF" : "transparent",
+      siteTabPassFg: isPass ? "#16181A" : "#6B7075",
+      siteTabPhoneBg: isPass ? "transparent" : "#FFFFFF",
+      siteTabPhoneFg: isPass ? "#6B7075" : "#16181A",
+      sitePickPass: () => this.setState({ sMode: "pass", sErr: "" }),
+      sitePickPhone: () => this.setState({ sMode: "phone", sStep: "phone", sErr: "" }),
+      siteLoginVal: s.sLogin,
+      sitePassVal: s.sPass,
+      sitePassType: s.sShow ? "text" : "password",
+      sitePassToggle: s.sShow ? "Скрыть" : "Показать",
+      siteTogglePass: () => this.setState({ sShow: !s.sShow }),
+      siteSetLogin: (e) => this.setState({ sLogin: e.target.value, sErr: "" }),
+      siteSetPass: (e) => this.setState({ sPass: e.target.value, sErr: "" }),
+      rememberBg: s.sRemember ? brand : "#FFFFFF",
+      rememberBorder: s.sRemember ? brand : "#C9C9C2",
+      rememberMark: s.sRemember ? "✓" : "",
+      siteToggleRemember: () => this.setState({ sRemember: !s.sRemember }),
+      sitePhoneVal: s.sPhone,
+      siteSetPhone: (e) => this.setState({ sPhone: e.target.value.replace(/[^\d ]/g, "").slice(0, 12), sErr: "" }),
+      siteCodeVal: s.sCode,
+      siteSetCode: (e) => this.setState({ sCode: e.target.value.replace(/\D/g, "").slice(0, 4), sErr: "" }),
+      siteCodeCells: [0, 1, 2, 3].map((i) => ({
+        ch: s.sCode[i] || "",
+        border: s.sErr ? "#E3A9A5" : i === s.sCode.length ? brand : "#E2E2DE"
+      })),
+      siteBackPhone: () => this.setState({ sStep: "phone", sCode: "", sErr: "" }),
+      siteErr: !!s.sErr,
+      siteErrText: s.sErr,
+      siteBtnBg: s.sLoading ? "#2E3237" : ready ? brand : "#E2E2DE",
+      siteBtnFg: s.sLoading || ready ? "#FFFFFF" : "#9AA0A6",
+      siteBtnLabel: s.sLoading ? "Проверяем…" : phoneStep ? "Получить код" : "Войти",
+      siteSubmit: () => this.siteSubmitAuth(),
+      siteLogout: () => { clearTimeout(this.st); this.setState({ siteAuthed: false, sPass: "", sCode: "", sStep: "phone", sErr: "", sLoading: false }); }
+    };
+  }
+
+  cur() { return CUR[this.props.currency ?? "TJS"] || "TJS"; }
+  money(n) {
+    const s = n.toFixed(2).split(".");
+    return s[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ") + "," + s[1] + " " + this.cur();
+  }
+
+  key(k) {
+    const s = this.state;
+    if (s.loading) return;
+    if (s.screen === "phone") {
+      if (k === "del") return this.setState({ phone: s.phone.slice(0, -1), error: false });
+      if (s.phone.length < 9) this.setState({ phone: s.phone + k, error: false });
+    } else {
+      if (k === "del") return this.setState({ code: s.code.slice(0, -1), error: false });
+      if (s.code.length < 4) {
+        const code = s.code + k;
+        this.setState({ code: code, error: false });
+        if (code.length === 4) this.t = setTimeout(() => this.verify(code), 220);
+      }
+    }
+  }
+
+  submitPhone() {
+    if (this.state.phone.length < 9 || this.state.loading) return;
+    this.setState({ loading: true, error: false });
+    this.t = setTimeout(() => this.setState({ loading: false, screen: "code", resend: 42, code: "" }), 1100);
+  }
+
+  verify(code) {
+    this.setState({ loading: true });
+    this.t = setTimeout(() => {
+      if (code === "0000") this.setState({ loading: false, error: true, code: "" });
+      else this.setState({ loading: false, screen: "app", tab: "home" });
+    }, 1200);
+  }
+
+  pullStart(e) {
+    const el = this.scroll.current;
+    if (!el || el.scrollTop > 0 || this.state.refreshing) return;
+    this.y0 = e.clientY; this.setState({ pulling: true });
+  }
+  pullMoveH(e) {
+    if (!this.state.pulling) return;
+    const dy = e.clientY - this.y0;
+    this.setState({ pull: Math.max(0, Math.min(88, dy * 0.55)) });
+  }
+  pullEnd() {
+    if (!this.state.pulling) return;
+    const go = this.state.pull > 52;
+    this.setState({ pulling: false, pull: go ? 56 : 0, refreshing: go });
+    if (!go) return;
+    clearTimeout(this.t);
+    this.t = setTimeout(() => {
+      const id = this.nextId++;
+      const sums = [190, 340.6, 72, 1280, 560.25];
+      this.setState((s) => ({
+        refreshing: false, pull: 0,
+        pays: [{ id: id, d: 0, t: "14:2" + (id % 10), sum: sums[id % sums.length], ok: id % 7 !== 0, bank: BANKS[id % BANKS.length] }].concat(s.pays)
+      }));
+    }, 1400);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const brand = this.props.brandColor ?? "#E31E24";
+    const merchant = this.props.merchantName ?? "Кафе «Рохат»";
+    const dial = this.props.dialCode ?? "+992";
+    const ios = (this.props.platform ?? "iOS") === "iOS";
+
+    const digits = s.phone.padEnd(9, "·");
+    const phoneMask = digits.slice(0, 2) + " " + digits.slice(2, 5) + " " + digits.slice(5, 7) + " " + digits.slice(7, 9);
+
+    const isAuth = s.screen === "phone" || s.screen === "code";
+    const phoneReady = s.phone.length === 9;
+    const today = s.pays.filter((p) => p.d === 0 && p.ok);
+    const last = s.pays.find((p) => p.ok);
+
+    const terminal = this.props.terminalCode ?? "35604";
+    const dayLabels = ["Сегодня", "Вчера", "24 августа"];
+    const dayDates = ["26 августа 2026", "25 августа 2026", "24 августа 2026"];
+    const days = [0, 1, 2].map((d) => {
+      const items = s.pays.filter((p) => p.d === d);
+      return {
+        label: dayLabels[d],
+        total: this.money(items.filter((p) => p.ok).reduce((a, p) => a + p.sum, 0)),
+        items: items.map((p, i) => ({
+          title: "Пополнение с " + p.bank,
+          status: p.ok ? "Успешно" : "Ошибка",
+          meta: (p.ok ? "успешно" : "не прошёл в АБС") + " · " + p.t + " · №" + (31400 + p.id),
+          sum: (p.ok ? "+" : "") + this.money(p.sum),
+          icon: p.ok ? "✓" : "!",
+          dot: p.ok ? "#1F9D63" : "#C9403A",
+          fg: p.ok ? "#16181A" : "#9AA0A6",
+          sep: i === items.length - 1 ? "transparent" : "#F0F0EC",
+          open: () => this.setState({ receipt: p })
+        }))
+      };
+    }).filter((d) => d.items.length);
+
+    const r = s.receipt;
+    const rcpRows = r ? [
+      { k: "Номер операции", v: String(31400 + r.id) },
+      { k: "Услуга", v: r.bank.split(" ")[0] + " на Актив" },
+      { k: "Код терминала", v: terminal },
+      { k: "Сумма операции", v: this.money(r.sum) },
+      { k: "Банк плательщика", v: r.bank },
+      { k: "Отмена операции", v: "Нет" },
+      { k: "Способ оплаты", v: "Единый QR-код" }
+    ] : [];
+
+    const cells = [0, 1, 2, 3].map((i) => ({
+      ch: s.code[i] || "",
+      border: s.error ? "#E3A9A5" : i === s.code.length ? brand : "#E2E2DE"
+    }));
+
+    const keyList = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
+    const keys = keyList.map((k) => ({
+      label: k === "del" ? "⌫" : k,
+      bg: k === "" ? "transparent" : "#EDEDE9",
+      press: k === "" ? null : () => this.key(k)
+    }));
+
+    // QR-подобная матрица 25×25 (детерминированная), без реального кодирования
+    const N = 25, cellsQr = [];
+    const finder = (r, c) => {
+      const zones = [[0, 0], [0, 18], [18, 0]];
+      for (let z = 0; z < 3; z++) {
+        const dr = r - zones[z][0], dc = c - zones[z][1];
+        if (dr >= 0 && dr < 7 && dc >= 0 && dc < 7) {
+          const ring = Math.max(Math.abs(dr - 3), Math.abs(dc - 3));
+          return ring === 3 || ring <= 1 ? 1 : 2;
+        }
+      }
+      return 0;
+    };
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const f = finder(r, c);
+        let on;
+        if (f) on = f === 1;
+        else on = ((r * 31 + c * 17 + ((r * c) % 11) + s.pays.length) % 7) < 3;
+        cellsQr.push({ c: on ? "#16181A" : "transparent" });
+      }
+    }
+
+    const steps = [
+      ["1", "Номер телефона", "phone"],
+      ["2", "SMS-код", "code"],
+      ["3", "Главная · QR", "home"],
+      ["4", "История платежей", "history"]
+    ].map((st) => {
+      const cur = st[2] === "phone" ? s.screen === "phone"
+        : st[2] === "code" ? s.screen === "code"
+        : s.screen === "app" && s.tab === st[2];
+      return {
+        n: st[0], label: st[1],
+        bg: cur ? "#2E3237" : "transparent",
+        border: cur ? "#42474D" : "#2E3237",
+        dotBg: cur ? brand : "#34383D",
+        dotFg: cur ? "#FFFFFF" : "#8E9399",
+        fg: cur ? "#FFFFFF" : "#9AA0A6",
+        go: () => {
+          clearTimeout(this.t);
+          if (st[2] === "phone") this.setState({ screen: "phone", loading: false, error: false, code: "" });
+          else if (st[2] === "code") this.setState({ screen: "code", loading: false, error: false, code: "", phone: s.phone || "921234567", resend: 42 });
+          else this.setState({ screen: "app", tab: st[2], loading: false, error: false, pull: 0, refreshing: false });
+        }
+      };
+    });
+
+    return Object.assign(this.siteVals(), {
+      steps: steps,
+      brand: brand,
+      merchant: merchant,
+      merchantId: (this.props.merchantId ?? "ID 40219 · ИНН 010012345"),
+      shellBg: s.screen === "app" ? "#F4F4F2" : "#FAFAF8",
+      statusFg: "#16181A",
+      clock: "14:32",
+      btnRadius: ios ? "16px" : "28px",
+
+      isAuth: isAuth,
+      isPhone: s.screen === "phone",
+      isCode: s.screen === "code",
+      isApp: s.screen === "app",
+      isHome: s.screen === "app" && s.tab === "home",
+      isHistory: s.screen === "app" && s.tab === "history",
+
+      authTitle: s.screen === "phone" ? "Вход для мерчантов" : "Код из SMS",
+      authSub: s.screen === "phone"
+        ? "Укажите номер, привязанный к вашей точке. Проверим его в базе банка."
+        : "Отправили 4 цифры на " + dial + " " + phoneMask,
+      dialCode: dial,
+      phoneMask: phoneMask,
+      fieldBorder: phoneReady ? brand : "#E2E2DE",
+      codeCells: cells,
+      resendStr: s.resend > 0 ? "новый код через 0:" + String(s.resend).padStart(2, "0") : "отправить код снова",
+      authError: s.error,
+      authLoading: s.loading,
+      authBtnLabel: s.loading
+        ? (s.screen === "phone" ? "Проверяем номер" : "Проверяем код")
+        : s.screen === "phone" ? "Продолжить" : "Войти",
+      authBtnBg: s.loading ? "#2E3237" : (s.screen === "phone" ? (phoneReady ? brand : "#E2E2DE") : (s.code.length === 4 ? brand : "#E2E2DE")),
+      authBtnFg: (s.loading || (s.screen === "phone" ? phoneReady : s.code.length === 4)) ? "#FFFFFF" : "#9AA0A6",
+      authNext: () => (s.screen === "phone" ? this.submitPhone() : s.code.length === 4 && this.verify(s.code)),
+      editPhone: () => this.setState({ screen: "phone", code: "", error: false }),
+      keys: keys,
+
+      qr: cellsQr,
+      qrPayload: (this.props.qrPayload ?? "Единый QR · терминал " + terminal),
+      todaySum: this.money(today.reduce((a, p) => a + p.sum, 0)),
+      todayCount: String(today.length),
+      lastPayStr: last ? "с " + last.bank + " · " + last.t : "нет платежей",
+      lastPaySum: last ? "+" + this.money(last.sum) : "—",
+      goHistory: () => this.setState({ tab: "history" }),
+
+      tg: s.tg.map((m) => {
+        const bot = m.from === "bot";
+        return {
+          align: bot ? "flex-start" : "flex-end",
+          bg: bot ? "#FFFFFF" : "#E3F1FD",
+          fg: "#16181A",
+          blr: bot ? "6px" : "18px",
+          brr: bot ? "18px" : "6px",
+          timeFg: "#9AA2AA",
+          time: m.time,
+          text: m.text,
+          hasQr: !!m.qr,
+          hasKeys: !!(m.keys && m.keys.length),
+          keys: (m.keys || []).map((k) => ({ label: k.label, press: () => this.tgAct(k.act) }))
+        };
+      }),
+      tgMenu: [
+        { label: "Мой QR", act: "qr" },
+        { label: "Итоги дня", act: "today" },
+        { label: "История", act: "history" }
+      ].map((c) => ({ label: c.label, press: () => this.tgAct(c.act) })),
+      tgIncoming: () => this.tgIncomingPay(),
+      tgRef: this.tgScroll,
+      smsRef: this.smsScroll,
+      terminal: terminal,
+
+      siteNav: ["Обзор", "Платежи", "Мои точки", "Сверка", "QR-коды"].map((n) => ({
+        label: n,
+        bg: s.siteNav === n ? "#EDEDE9" : "transparent",
+        fg: s.siteNav === n ? "#16181A" : "#6B7075",
+        fw: s.siteNav === n ? "600" : "400",
+        press: () => this.setState({ siteNav: n })
+      })),
+      siteTitle: s.siteNav === "Платежи" ? "Платежи" : s.siteNav,
+      siteSub: "26 августа 2026 · терминал " + terminal + " · Единый QR",
+      siteKpi: [
+        { label: "Сумма за сегодня", value: this.money(today.reduce((a, p) => a + p.sum, 0)) },
+        { label: "Платежей", value: String(today.length) },
+        { label: "Средний чек", value: today.length ? this.money(today.reduce((a, p) => a + p.sum, 0) / today.length) : "—" }
+      ],
+      siteRows: s.pays.slice(0, 8).map((p) => ({
+        op: String(p.op || (31400 + p.id)),
+        bank: p.bank,
+        time: p.t,
+        dot: p.ok ? "#1F9D63" : "#C9403A",
+        sum: (p.ok ? "+" : "") + this.money(p.sum),
+        fg: p.ok ? "#16181A" : "#9AA0A6"
+      })),
+
+      posEntry: s.posStage === "entry",
+      posWait: s.posStage === "wait",
+      posDone: s.posStage === "done",
+      posAmountStr: (s.posAmount ? s.posAmount.replace(".", ",") : "0") + " " + this.cur(),
+      posKeys: ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"].map((k) => ({
+        label: k === "del" ? "⌫" : k,
+        press: () => this.posKey(k)
+      })),
+      posBtnBg: parseFloat(s.posAmount) ? brand : "#E2E2DE",
+      posBtnFg: parseFloat(s.posAmount) ? "#FFFFFF" : "#9AA0A6",
+      posDoneMeta: "операция №" + (s.posOp || "") + " · терминал " + terminal + "\nSMS и уведомление отправлены",
+      posShow: () => this.posShowQr(),
+      posCancel: () => { clearTimeout(this.pt); this.setState({ posStage: "entry" }); },
+      posReset: () => this.setState({ posStage: "entry", posAmount: "", posOp: null }),
+
+      sms: s.smsFeed,
+      smsSend: () => this.smsSimulate(),
+
+      days: days,
+      bankName: this.props.bankName ?? "Актив Банк",
+      showReceipt: !!r,
+      rcpRows: rcpRows,
+      rcpSum: r ? this.money(r.sum) : "",
+      rcpStatus: r ? (r.ok ? "Операция успешна" : "Операция не прошла") : "",
+      rcpIcon: r ? (r.ok ? "✓" : "!") : "",
+      rcpDot: r ? (r.ok ? "#1F9D63" : "#C9403A") : "#1F9D63",
+      rcpDate: r ? dayDates[r.d] + ", " + r.t : "",
+      closeReceipt: () => this.setState({ receipt: null }),
+      pullH: (s.pull || (s.refreshing ? 56 : 0)) + "px",
+      pullTransition: s.pulling ? "none" : "height .25s ease",
+      pullLabel: s.refreshing ? "обновляем статусы" : s.pull > 52 ? "отпустите" : "потяните вниз",
+      spinAnim: s.refreshing ? "mSpin .8s linear infinite" : "none",
+      scrollRef: this.scroll,
+      pullDown: (e) => this.pullStart(e),
+      pullMove: (e) => this.pullMoveH(e),
+      pullUp: () => this.pullEnd(),
+
+      tabs: [
+        { label: "Главная", key: "home", iconR: "4px" },
+        { label: "История", key: "history", iconR: "9px" }
+      ].map((t) => ({
+        label: t.label,
+        iconR: t.iconR,
+        bg: s.tab === t.key ? "#F0F0EC" : "transparent",
+        fg: s.tab === t.key ? brand : "#9AA0A6",
+        go: () => this.setState({ tab: t.key, pull: 0, refreshing: false })
+      }))
+    });
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="./image-slot.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #24262A; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  a { color: #0E8F6F; text-decoration: none; }
+  a:hover { color: #0B7259; }
+  @keyframes posSpin { to { transform: rotate(360deg); } }
+</style>
+</helmet>
+<div style="width: 420px; height: 900px; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #F4F4F2; color: #16181A; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+
+  <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#D6202A"/><rect x="30" y="30" width="40" height="40" rx="10" fill="#fff"/><text x="50" y="60" font-family="system-ui" font-size="26" font-weight="700" fill="#D6202A" text-anchor="middle">QR</text></svg></template>
+
+  <div style="flex: 0 0 auto; height: 36px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: #16181A;">
+    <div>{{ clockStr }}</div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <div style="width: 18px; height: 10px; border: 1.5px solid #16181A; border-radius: 3px; opacity: 0.55;"></div>
+      <div style="width: 22px; height: 11px; border: 1.5px solid #16181A; border-radius: 3px; opacity: 0.55;"></div>
+    </div>
+  </div>
+
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 6px 22px 20px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+          <div style="font-size: 22px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ merchant }}</div>
+          <div style="font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ merchantId }}</div>
+        </div>
+        <img src="assets/activbank-qr-app.png" alt="ActivBank QR" style="width: 40px; height: 40px; flex: 0 0 40px; border-radius: 10px; object-fit: cover; display: block;" />
+      </div>
+
+      <div style="margin-top: 20px; padding: 22px; border-radius: 22px; background: #FFFFFF; border: 1px solid #E7E7E2; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+        <div style="font-size: 15px; color: #6B7075;">Покажите QR покупателю</div>
+        <div style="width: 216px; height: 216px; display: grid; grid-template-columns: repeat({{ qrN }}, 1fr); grid-template-rows: repeat({{ qrN }}, 1fr);">
+          <sc-for list="{{ qr }}" as="q" hint-placeholder-count="0">
+            <div style="background: {{ q.c }};"></div>
+          </sc-for>
+        </div>
+        <div style="font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ qrPayload }}</div>
+      </div>
+
+      <div style="margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="padding: 18px; border-radius: 18px; background: #FFFFFF; border: 1px solid #E7E7E2; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 14px; color: #6B7075;">Сумма за сегодня</div>
+          <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-family: 'IBM Plex Mono', monospace;">{{ todaySum }}</div>
+        </div>
+        <div style="padding: 18px; border-radius: 18px; background: #FFFFFF; border: 1px solid #E7E7E2; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 14px; color: #6B7075;">Платежей</div>
+          <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-family: 'IBM Plex Mono', monospace;">{{ todayCount }}</div>
+        </div>
+      </div>
+
+      <div onClick="{{ goHistory }}" style="margin-top: 12px; padding: 18px 20px; border-radius: 18px; background: #FFFFFF; border: 1px solid #E7E7E2; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; user-select: none;" style-active="background: #F4F4F2;">
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+          <div style="font-size: 17px; font-weight: 500;">Последний платёж</div>
+          <div style="font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ lastPayStr }}</div>
+        </div>
+        <div style="font-size: 19px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; color: #0E8F6F;">{{ lastPaySum }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+
+  <div ref="{{ listRef }}" onTouchStart="{{ pullStart }}" onTouchMove="{{ pullMove }}" onTouchEnd="{{ pullEnd }}" onMouseDown="{{ pullStart }}" onMouseMove="{{ pullMove }}" onMouseUp="{{ pullEnd }}" onMouseLeave="{{ pullEnd }}" onWheel="{{ pullWheel }}" style="flex: 1; min-height: 0; overflow-y: auto; padding: 6px 22px 20px; touch-action: pan-y;">
+    <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; padding-bottom: 4px;">История</div>
+    <div style="height: {{ pullH }}px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+      <div style="font-size: 12px; color: {{ pullColor }}; font-family: 'IBM Plex Mono', monospace;">{{ pullText }}</div>
+    </div>
+    <sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 40px 8px; font-size: 15px; line-height: 1.5; color: #9AA0A6; text-wrap: pretty;">{{ emptyText }}</div>
+    </sc-if>
+    <sc-for list="{{ rows }}" as="r" hint-placeholder-count="7">
+      <div onClick="{{ r.open }}" style="margin-bottom: 8px; padding: 14px; background: #FFFFFF; border: 1px solid #E2E2DE; border-left: 3px solid {{ r.edge }}; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; user-select: none;" style-active="background: #FAFAF8;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+          <div style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em; font-family: 'IBM Plex Mono', monospace; color: {{ r.sumColor }};">{{ r.sum }}</div>
+          <div style="height: 26px; padding: 0 10px; display: flex; align-items: center; border-radius: 7px; font-size: 13px; background: {{ r.chipBg }}; color: {{ r.chipFg }};">{{ r.status }}</div>
+        </div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">
+          <div>{{ r.payer }}</div>
+          <div>{{ r.time }}</div>
+        </div>
+      </div>
+    </sc-for>
+    </div>
+  </sc-if>
+
+  <div style="flex: 0 0 auto; padding: 8px 22px 18px; background: #FFFFFF; border-top: 1px solid #E7E7E2; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="2">
+      <div onClick="{{ t.pick }}" style="height: 58px; border-radius: 16px; background: {{ t.bg }}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; user-select: none;">
+        <div style="width: 17px; height: 17px; border: 2px solid {{ t.fg }}; border-radius: {{ t.radius }};"></div>
+        <div style="font-size: 12px; color: {{ t.fg }};">{{ t.name }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 14; background: #F4F4F2; display: flex; flex-direction: column;">
+      <div style="flex: 0 0 auto; padding: 20px 16px 16px; background: #FFFFFF; border-bottom: 1px solid #E2E2DE; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+          <div onClick="{{ closeSel }}" style="height: 44px; padding: 0 14px; display: flex; align-items: center; gap: 8px; margin-left: -14px; font-size: 16px; color: #6B7075; cursor: pointer; user-select: none;">← Назад</div>
+          <div style="height: 28px; padding: 0 11px; display: flex; align-items: center; border-radius: 7px; font-size: 13px; background: {{ selChipBg }}; color: {{ selChipFg }};">{{ selStatus }}</div>
+        </div>
+        <div style="font-size: 40px; font-weight: 600; letter-spacing: -0.02em; font-family: 'IBM Plex Mono', monospace;">{{ selSum }}</div>
+        <div style="font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ selId }}</div>
+      </div>
+
+      <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px;">
+        <div style="padding: 16px; background: #FFFFFF; border: 1px solid #E2E2DE; border-radius: 12px; display: flex; flex-direction: column; gap: 14px;">
+          <sc-for list="{{ selFields }}" as="f" hint-placeholder-count="6">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px;">
+              <div style="font-size: 14px; color: #6B7075;">{{ f.k }}</div>
+              <div style="font-size: 14px; font-weight: 500; text-align: right; font-family: 'IBM Plex Mono', monospace;">{{ f.v }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="margin-top: 12px; padding: 16px; background: #FFFFFF; border: 1px solid #E2E2DE; border-radius: 12px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-size: 14px; font-weight: 600;">Ход операции</div>
+          <sc-for list="{{ selTrail }}" as="t" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 8px; height: 8px; flex: 0 0 8px; border-radius: 4px; background: {{ t.dot }};"></div>
+              <div style="flex: 1; min-width: 0; font-size: 14px;">{{ t.name }}</div>
+              <div style="font-size: 13px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">{{ t.time }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex: 0 0 auto; padding: 12px 16px 16px; background: #FFFFFF; border-top: 1px solid #E2E2DE; display: flex; flex-direction: column; gap: 10px;">
+        <div onClick="{{ recheck }}" style="height: 56px; display: flex; align-items: center; justify-content: center; background: #16181A; color: #FFFFFF; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; user-select: none;" style-active="background: #2E3237;">{{ recheckLabel }}</div>
+        <div style="display: flex; gap: 10px;">
+          <div style="flex: 1; height: 52px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E2DE; border-radius: 12px; background: #FFFFFF; font-size: 16px; cursor: pointer; user-select: none;" style-active="background: #F0F0EC;">Печать</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showLogin }}" hint-placeholder-val="{{ true }}">
+    <div style="position: absolute; inset: 0; z-index: 20; background: #F4F4F2; display: flex; flex-direction: column;">
+      <div style="flex: 0 0 auto; height: 34px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: #16181A;">
+        <div>{{ clockStr }}</div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 18px; height: 10px; border: 1.5px solid #16181A; border-radius: 3px; opacity: 0.55;"></div>
+          <div style="width: 22px; height: 11px; border: 1.5px solid #16181A; border-radius: 3px; opacity: 0.55;"></div>
+        </div>
+      </div>
+
+      <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 14px 22px 0; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="assets/activbank-qr-app.png" alt="ActivBank QR" style="width: 44px; height: 44px; border-radius: 11px; object-fit: cover; display: block;" />
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.01em; color: #16181A;">ActivBank QR</div>
+            <div style="font-size: 11px; letter-spacing: 0.06em; color: #9AA0A6; font-family: 'IBM Plex Mono', monospace;">кабинет мерчанта</div>
+          </div>
+        </div>
+
+        <sc-if value="{{ authPhone }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; color: #16181A;">Вход для мерчантов</div>
+              <div style="font-size: 14px; line-height: 1.5; color: #6B7075; text-wrap: pretty;">Укажите номер, привязанный к вашей точке. Проверим его в базе банка.</div>
+            </div>
+            <div style="height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 20px; background: #FFFFFF; border: 1.5px solid {{ phoneBorder }}; border-radius: 16px;">
+              <div style="font-size: 18px; color: #6B7075; font-family: 'IBM Plex Mono', monospace;">+992</div>
+              <div style="font-size: 18px; letter-spacing: 0.12em; color: #16181A; font-family: 'IBM Plex Mono', monospace;">{{ phoneMask }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ authCode }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="font-size: 13px; line-height: 1.45; color: #6B7075;">{{ codeSub }}</div>
+            <div style="display: flex; gap: 10px;">
+              <sc-for list="{{ codeCells }}" as="c" hint-placeholder-count="4">
+                <div style="flex: 1; height: 68px; background: #FFFFFF; border: 1.5px solid {{ c.border }}; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;">{{ c.ch }}</div>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div onClick="{{ backToPhone }}" style="font-size: 14px; color: #0E8F6F; cursor: pointer; user-select: none;">Изменить номер</div>
+              <div onClick="{{ resend }}" style="font-size: 14px; color: {{ resendColor }}; cursor: pointer; user-select: none; font-family: 'IBM Plex Mono', monospace;">{{ resendLabel }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ authError }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 14px 16px; border-radius: 12px; background: #FDECEA; font-size: 14px; line-height: 1.45; color: #B3352F; text-wrap: pretty;">{{ authErrorText }}</div>
+        </sc-if>
+
+        <div style="flex: 1; min-height: 24px;"></div>
+      </div>
+
+      <div style="flex: 0 0 auto; padding: 0 22px 26px; display: flex; flex-direction: column; gap: 14px;">
+        <div onClick="{{ authSubmit }}" style="height: 58px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: {{ authBtnBg }}; color: {{ authBtnFg }}; font-size: 17px; font-weight: 600; cursor: pointer; user-select: none;">{{ authBtnLabel }}</div>
+
+        <sc-if value="{{ showKeypad }}" hint-placeholder-val="{{ true }}">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <sc-for list="{{ authKeys }}" as="k" hint-placeholder-count="12">
+              <div onClick="{{ k.press }}" style="height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: {{ k.bg }}; font-size: 21px; font-weight: 500; color: #16181A; cursor: pointer; user-select: none;" style-active="background: #E4E4DF;">{{ k.label }}</div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 420, &quot;height&quot;: 900}, &quot;apiBaseUrl&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;http://10.64.20.101:8888&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Бэкенд&quot;}, &quot;connection&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Онлайн&quot;, &quot;Нестабильно&quot;, &quot;Нет связи&quot;], &quot;default&quot;: &quot;Онлайн&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Бэкенд&quot;}, &quot;pollSeconds&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;min&quot;: 2, &quot;max&quot;: 30, &quot;step&quot;: 1, &quot;default&quot;: 5, &quot;unit&quot;: &quot; с&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Бэкенд&quot;}}">
+/* ── Точки интеграции с бэком ────────────────────────────────────────
+   Пока baseUrl пустой — экраны живут на моках. Придут эндпоинты:
+   заполнить baseUrl + paths, остальную логику не трогать.
+
+   POST otpRequest    { phone }                -> { ok }
+   POST /pos/login    { phone }
+        -> 200 { ok, terminalId, terminalName, storeName }
+        -> 404 «терминал не найден» · 403 «не наш мерчант»
+   GET  /pos/terminal?phone=…
+        -> { terminal: { terminalName, terminalPhone, storeName, terminalQR },
+             last_payment: { sender, amount, status, creation_datetime } | null }
+   GET  /pos/history?phone=…
+        -> { terminal: {…}, count, payments: [{ sender, amount, status, creation_datetime }] }
+
+   Что меняется на фронте:
+   · вход           — телефон уходит в /pos/login, ошибка 404/403 показывается под полем
+   · экран «Главная»— storeName (название точки), terminalName (ID), terminalQR (payload QR),
+                      last_payment (карточка «Последний платёж»), суммы за сегодня — из payments
+   · «История»      — payments из /pos/history; pull-to-refresh перезапрашивает список,
+                      новые creation_datetime поднимаются вверх
+   · sender         — id банка-отправителя, резолвится в имя через BANKS
+   · amount         — TJS с копейками (float из бэка), НЕ центы
+──────────────────────────────────────────────────────────────────── */
+const API = {
+  baseUrl: "",
+  timeoutMs: 8000,
+  paths: {
+    login: "/pos/login",
+    terminal: "/pos/terminal",
+    history: "/pos/history"
+  }
+};
+
+const hhmm = (d) => String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+const money = (v) => {
+  const n = Math.max(0, Number(v) || 0);
+  const int = String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return int + "," + String(Math.round((n - Math.floor(n)) * 100)).padStart(2, "0") + " TJS";
+};
+
+/* sender из incoming_tx -> отображаемое имя банка */
+const BANKS = {
+  "1": "Алиф Банк", "2": "Эсхата", "3": "Амонатбонк", "4": "Душанбе Сити",
+  "5": "Спитамен Банк", "6": "Ориён Банк"
+};
+const bankName = (sender) => BANKS[String(sender)] || (sender != null ? "Банк " + sender : "—");
+
+/* статусы бэка -> статусы UI */
+const STMAP = {
+  success: "success", ok: "success", accepted: "success", completed: "success", paid: "success",
+  pending: "pending", new: "pending", processing: "pending", created: "pending",
+  declined: "declined", failed: "declined", error: "declined", rejected: "declined",
+  expired: "expired", timeout: "expired",
+  refunded: "refunded", refund: "refunded", reversed: "refunded"
+};
+const uiStatus = (s) => STMAP[String(s || "").toLowerCase()] || "pending";
+
+/* incoming_tx -> строка истории */
+const normTx = (tx, i) => {
+  const dt = tx.creation_datetime ? new Date(tx.creation_datetime) : new Date();
+  return {
+    id: "TX-" + (tx.creation_datetime || i),
+    ts: dt.getTime(),
+    time: hhmm(dt),
+    date: String(dt.getDate()).padStart(2, "0") + "." + String(dt.getMonth() + 1).padStart(2, "0"),
+    amount: Number(tx.amount) || 0,
+    sender: tx.sender,
+    bank: bankName(tx.sender),
+    payer: bankName(tx.sender),
+    status: uiStatus(tx.status)
+  };
+};
+
+/* демо-ответ /pos/history в точном формате incoming_tx */
+const iso = (h, m) => { const d = new Date(); d.setHours(h, m, 0, 0); return d.toISOString(); };
+const SEED_TX = [
+  { sender: "1", amount: 245.0, status: "success", creation_datetime: iso(14, 26) },
+  { sender: "2", amount: 80.0, status: "success", creation_datetime: iso(14, 11) },
+  { sender: "3", amount: 1320.0, status: "refunded", creation_datetime: iso(13, 58) },
+  { sender: "1", amount: 159.0, status: "failed", creation_datetime: iso(13, 44) },
+  { sender: "4", amount: 460.5, status: "success", creation_datetime: iso(13, 20) },
+  { sender: "2", amount: 75.0, status: "expired", creation_datetime: iso(12, 52) },
+  { sender: "1", amount: 2100.0, status: "success", creation_datetime: iso(12, 31) },
+  { sender: "3", amount: 335.0, status: "success", creation_datetime: iso(11, 47) }
+];
+const SEED = SEED_TX.map(normTx);
+
+const ST = {
+  success: { label: "Оплачено", bg: "#E8F5F0", fg: "#0B7259", dot: "#0E8F6F" },
+  pending: { label: "Ожидание", bg: "#FFF6E5", fg: "#8A5A00", dot: "#D89A1F" },
+  declined: { label: "Отказ", bg: "#FDECEA", fg: "#B3352F", dot: "#C9403A" },
+  expired: { label: "Истёк", bg: "#F0F0EC", fg: "#6B7075", dot: "#9AA0A6" },
+  refunded: { label: "Возврат", bg: "#EEF1FB", fg: "#3B4E8F", dot: "#5A6FB5" }
+};
+
+
+class Component extends DCLogic {
+  state = {
+    authed: false, aMode: null, aStep: "phone", phone: "", code: "",
+    login: "", pass: "", showPass: false, aErr: "", aLoading: false, resendIn: 0,
+    ops: SEED, filter: "Все", selId: null, sinceSync: 0, syncOk: true, pull: 0, pulling: false,
+    tab: "home", screen: "list", amount: "", result: null, attempt: 0, payer: "",
+    storeName: "", terminalName: "", terminalPhone: "", terminalQR: "", lastPay: null,
+    terminal: "—", now: new Date()
+  };
+
+  mockList = SEED_TX.slice();
+
+  componentDidMount() {
+    this.clock = setInterval(() => this.tick(), 1000);
+    import("./qr-encode.js").then((mod) => { this.qrFn = mod.qrMatrix; this.forceUpdate(); }).catch(() => {});
+  }
+
+  /* заглушка, пока terminalQR не пришёл с бэка */
+  placeholderQr() {
+    const out = [];
+    for (let r = 0; r < 25; r++) for (let c = 0; c < 25; c++) {
+      const zones = [[0, 0], [0, 18], [18, 0]];
+      let fz = 0;
+      for (let z = 0; z < 3; z++) {
+        const dr = r - zones[z][0], dc = c - zones[z][1];
+        if (dr >= 0 && dr < 7 && dc >= 0 && dc < 7) {
+          fz = Math.max(Math.abs(dr - 3), Math.abs(dc - 3)) === 3 || Math.max(Math.abs(dr - 3), Math.abs(dc - 3)) <= 1 ? 1 : 2;
+        }
+      }
+      out.push({ c: (fz ? fz === 1 : false) ? "#16181A" : fz ? "transparent" : "#E4E4DF" });
+    }
+    return out;
+  }
+
+  /* матрица QR строится из terminalQR, полученного с бэка */
+  qrGrid(payload) {
+    if (!this.qrFn || !payload) return null;
+    if (this.qrCache && this.qrCache.payload === payload) return this.qrCache.grid;
+    try {
+      const g = this.qrFn(payload);
+      this.qrCache = { payload: payload, grid: g };
+      return g;
+    } catch (e) { return null; }
+  }
+  componentWillUnmount() { clearInterval(this.clock); clearTimeout(this.at); clearTimeout(this.pt); clearTimeout(this.qt); clearTimeout(this.wt); }
+
+  listRef = (el) => { this.list = el; };
+
+  pullStart = (e) => {
+    if (this.state.pulling || !this.list || this.list.scrollTop > 0) return;
+    const t = e.touches ? e.touches[0] : e;
+    this.y0 = t.clientY;
+  };
+  pullMove = (e) => {
+    if (this.y0 == null || this.state.pulling) return;
+    const t = e.touches ? e.touches[0] : e;
+    const dy = t.clientY - this.y0;
+    if (dy <= 0) return this.setState({ pull: 0 });
+    if (e.cancelable) e.preventDefault();
+    this.setState({ pull: Math.min(96, dy * 0.7) });
+  };
+  pullEnd = () => {
+    this.y0 = null;
+    if (this.state.pull >= 48) return this.doRefresh();
+    this.setState({ pull: 0 });
+  };
+  pullWheel = (e) => {
+    if (this.state.pulling || !this.list || this.list.scrollTop > 0 || e.deltaY >= 0) return;
+    const next = Math.min(96, this.state.pull - e.deltaY * 1.2);
+    this.setState({ pull: next });
+    clearTimeout(this.wt);
+    this.wt = setTimeout(() => this.pullEnd(), 220);
+  };
+
+  doRefresh() {
+    if (this.state.pulling) return;
+    this.setState({ pull: 56, pulling: true });
+    if (!this.base() || this.fellBack) this.mockList = [this.mockTx()].concat(this.mockList);
+    this.api("history", {})
+      .then((r) => {
+        this.applyTerminal(r && r.terminal);
+        this.applyPayments(r && r.payments);
+        this.setState({ pulling: false, pull: 0 });
+      })
+      .catch(() => this.setState({ pulling: false, pull: 0, syncOk: false }));
+  }
+
+  offline() { return (this.props.connection ?? "Онлайн") === "Нет связи"; }
+  pollSec() { return Math.max(2, Math.round(this.props.pollSeconds ?? 5)); }
+
+  tick() {
+    const s = this.state;
+    const patch = { now: new Date() };
+    if (s.resendIn > 0) patch.resendIn = s.resendIn - 1;
+    if (s.authed) patch.sinceSync = s.sinceSync + 1;
+    this.setState(patch);
+  }
+
+  base() { return (this.props.apiBaseUrl ?? API.baseUrl ?? "http://10.64.20.101:8888").replace(/\/$/, ""); }
+  fullPhone() { return "992" + this.state.phone; }
+
+  api(name, payload) {
+    if (this.offline()) return Promise.reject(new Error("offline"));
+    if (!this.base() || this.fellBack) return this.mock(name, payload);
+    const get = name !== "login";
+    const q = get ? "?phone=" + encodeURIComponent((payload && payload.phone) || this.fullPhone()) : "";
+    const ctl = new AbortController();
+    const kill = setTimeout(() => ctl.abort(), API.timeoutMs);
+    return fetch(this.base() + API.paths[name] + q, {
+      method: get ? "GET" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: get ? undefined : JSON.stringify(payload || {}),
+      signal: ctl.signal
+    })
+      .then((r) => r.json().then((body) => {
+        if (!r.ok) throw Object.assign(new Error("http"), { code: r.status, detail: body && body.detail });
+        return body;
+      }))
+      .catch((e) => {
+        /* хост недоступен (превью вне сети банка) — уходим в демо-бэк с теми же формами ответов */
+        if (e && e.code) throw e;
+        this.fellBack = true;
+        return this.mock(name, payload);
+      })
+      .finally(() => clearTimeout(kill));
+  }
+
+  /* демо-бэк: те же формы ответов, что у FastAPI */
+  mock(name, payload) {
+    const wait = (ms, val) => new Promise((res, rej) => { this.pt = setTimeout(() => (val instanceof Error ? rej(val) : res(val)), ms); });
+    const term = { terminalName: "T-04", terminalPhone: this.fullPhone(), storeName: "Кафе «Рохат»", terminalQR: "https://qr.activbank.tj/t/40219" };
+    if (name === "login") {
+      if ((payload.phone || "").endsWith("000")) return wait(700, Object.assign(new Error("http"), { code: 404, detail: "Терминал с таким номером не найден" }));
+      return wait(700, { ok: true, terminalId: 40219, terminalName: term.terminalName, storeName: term.storeName });
+    }
+    if (name === "terminal") return wait(400, { terminal: term, last_payment: this.mockTx() });
+    return wait(500, { terminal: term, count: this.mockList.length, payments: this.mockList });
+  }
+
+  mockTx() {
+    const pool = [245, 80, 159, 460.5, 1234.5, 75, 680, 312];
+    return {
+      sender: String(1 + Math.floor(Math.random() * 4)),
+      amount: pool[Math.floor(Math.random() * pool.length)],
+      status: "success",
+      creation_datetime: new Date().toISOString()
+    };
+  }
+
+  applyTerminal(t) {
+    if (!t) return;
+    this.setState({
+      storeName: t.storeName || "", terminalName: t.terminalName || "",
+      terminalPhone: t.terminalPhone || "", terminalQR: t.terminalQR || "",
+      terminal: t.terminalName || "—"
+    });
+  }
+
+  applyPayments(list) {
+    const ops = (list || []).map(normTx).sort((a, b) => b.ts - a.ts);
+    this.setState({ ops: ops, lastPay: ops.find((o) => o.status === "success") || null, sinceSync: 0, syncOk: true });
+  }
+
+  loadTerminal() {
+    return this.api("terminal", {}).then((r) => {
+      this.applyTerminal(r && r.terminal);
+      if (r && r.last_payment) this.setState({ lastPay: normTx(r.last_payment, 0) });
+    });
+  }
+
+  pollHistory() {
+    this.setState({ sinceSync: 0 });
+    return this.api("history", {})
+      .then((r) => { this.applyTerminal(r && r.terminal); this.applyPayments(r && r.payments); })
+      .catch(() => this.setState({ syncOk: false }));
+  }
+
+  mode() { return "phone"; }
+
+  aKey(k) {
+    const s = this.state;
+    if (s.aLoading) return;
+    const field = s.aStep === "phone" ? "phone" : "code";
+    const max = field === "phone" ? 9 : 4;
+    if (k === "del") return this.setState({ [field]: s[field].slice(0, -1), aErr: "" });
+    if (s[field].length >= max) return;
+    const next = s[field] + k;
+    this.setState({ [field]: next, aErr: "" });
+    if (field === "phone" && next.length === 9) this.at = setTimeout(() => this.doLogin(), 250);
+  }
+
+  doLogin() {
+    const s = this.state;
+    if (s.phone.length < 9 || s.aLoading) return;
+    this.setState({ aLoading: true, aErr: "" });
+    this.api("login", { phone: this.fullPhone() })
+      .then((r) => this.openShift(r))
+      .catch((e) => this.setState({
+        aLoading: false,
+        aErr: e && e.code === 404 ? "Терминал с таким номером не найден."
+          : e && e.code === 403 ? "Терминал не подключён к ActivBank QR."
+          : "Нет связи с сервером. Проверьте интернет."
+      }));
+  }
+
+  openShift(r) {
+    const d = r || {};
+    this.setState({
+      aLoading: false, authed: true, aErr: "", sinceSync: 0, syncOk: true, tab: "home",
+      storeName: d.storeName || "", terminalName: d.terminalName || "", terminal: d.terminalName || "—"
+    });
+    this.loadTerminal().catch(() => {});
+    this.pollHistory();
+  }
+
+  logout() {
+    clearTimeout(this.at); clearTimeout(this.pt);
+    this.setState({ authed: false, aStep: "phone", code: "", pass: "", aErr: "", aLoading: false, screen: "list", selId: null, amount: "" });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const isPass = this.mode() === "pass";
+    const isCode = !isPass && s.aStep === "code";
+    const isPhone = !isPass && s.aStep === "phone";
+    const d = s.phone.padEnd(9, "·");
+    const phoneReady = s.phone.length === 9;
+    const passReady = !!s.login.trim() && s.pass.length >= 4;
+    const authReady = isPhone ? phoneReady : isCode ? s.code.length === 4 : passReady;
+
+    const conn = this.props.connection ?? "Онлайн";
+    const off = conn === "Нет связи";
+    const shaky = conn === "Нестабильно";
+    const okSync = s.syncOk && !off;
+
+    const counts = { "Все": s.ops.length };
+    ["success", "pending", "declined", "refunded"].forEach((k) => {
+      counts[ST[k].label] = s.ops.filter((o) => o.status === k).length;
+    });
+    const visible = s.filter === "Все" ? s.ops : s.ops.filter((o) => ST[o.status].label === s.filter);
+    const okTotal = s.ops.filter((o) => o.status === "success").reduce((a, o) => a + o.amount, 0);
+    const sel = s.ops.find((o) => o.id === s.selId) || null;
+    const last = s.lastPay || s.ops.find((o) => o.status === "success") || null;
+
+    const payload = s.terminalQR || "";
+    const real = this.qrGrid(payload);
+    let qrN = 25, cellsQr = [];
+    if (real) {
+      qrN = real.n;
+      for (let i = 0; i < real.bits.length; i++) cellsQr.push({ c: real.bits[i] ? "#16181A" : "transparent" });
+    } else {
+      cellsQr = this.placeholderQr();
+    }
+
+    return {
+      qrN: qrN,
+      /* вход */
+      showLogin: !s.authed,
+      authPhone: isPhone, authCode: isCode, authPass: isPass, showKeypad: !isPass,
+      tabPhoneBg: isPass ? "transparent" : "#FFFFFF",
+      tabPhoneFg: isPass ? "#6B7075" : "#16181A",
+      tabPassBg: isPass ? "#FFFFFF" : "transparent",
+      tabPassFg: isPass ? "#16181A" : "#6B7075",
+      pickPhone: () => this.setState({ aMode: "phone", aStep: "phone", aErr: "", code: "" }),
+      pickPass: () => this.setState({ aMode: "pass", aErr: "" }),
+      phoneMask: d.slice(0, 2) + " " + d.slice(2, 5) + " " + d.slice(5, 7) + " " + d.slice(7, 9),
+      phoneBorder: phoneReady ? "#0E8F6F" : "#E2E2DE",
+      codeSub: "Код отправлен по SMS на +992 " + d.slice(0, 2) + " ··· " + d.slice(7, 9),
+      codeCells: [0, 1, 2, 3].map((i) => ({
+        ch: s.code[i] || "",
+        border: s.aErr ? "#E3A9A5" : i === s.code.length ? "#0E8F6F" : "#E2E2DE"
+      })),
+      backToPhone: () => this.setState({ aStep: "phone", code: "", aErr: "" }),
+      resendLabel: s.resendIn > 0 ? "Код снова через " + s.resendIn + " с" : "Отправить код снова",
+      resendColor: s.resendIn > 0 ? "#9AA0A6" : "#0E8F6F",
+      resend: () => this.doLogin(),
+      loginVal: s.login, passVal: s.pass,
+      passType: s.showPass ? "text" : "password",
+      passToggleLabel: s.showPass ? "Скрыть" : "Показать",
+      togglePass: () => this.setState({ showPass: !s.showPass }),
+      setLogin: (e) => this.setState({ login: e.target.value, aErr: "" }),
+      setPass: (e) => this.setState({ pass: e.target.value, aErr: "" }),
+      authError: !!s.aErr, authErrorText: s.aErr,
+      authKeys: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"].map((k) => ({
+        label: k === "del" ? "⌫" : k,
+        bg: k === "" ? "transparent" : "#EAEAE5",
+        border: "transparent",
+        press: k === "" ? null : () => this.aKey(k)
+      })),
+      authBtnBg: s.aLoading ? "#2E3237" : authReady ? "#16181A" : "#E2E2DE",
+      authBtnFg: s.aLoading || authReady ? "#FFFFFF" : "#9AA0A6",
+      authBtnLabel: s.aLoading ? "Проверяем…" : isPhone ? "Продолжить" : "Открыть смену",
+      authSubmit: () => this.doLogin(),
+
+
+      /* история */
+      clockStr: hhmm(s.now),
+      netStr: off ? "нет сети" : shaky ? "2G" : "4G",
+      listRef: this.listRef,
+      pullStart: this.pullStart, pullMove: this.pullMove, pullEnd: this.pullEnd, pullWheel: this.pullWheel,
+      pullH: Math.round(s.pull),
+      pullText: s.pulling ? "GET /pos/history…" : s.pull >= 56 ? "отпустите — запрос уйдёт" : s.pull > 0 ? "потяните вниз" : !s.syncOk ? "последний запрос не прошёл" : "",
+      pullColor: !s.syncOk && !s.pulling && s.pull === 0 ? "#B3352F" : "#9AA0A6",
+      rows: visible.map((o) => {
+        const st = ST[o.status];
+        return {
+          time: o.time, sum: money(o.amount), payer: o.payer, status: st.label,
+          chipBg: st.bg, chipFg: st.fg, edge: st.dot,
+          sumColor: o.status === "success" ? "#16181A" : "#6B7075",
+          open: () => this.setState({ selId: o.id })
+        };
+      }),
+      noRows: visible.length === 0,
+      emptyText: "Пока нет операций. Потяните список вниз, чтобы обновить.",
+
+      /* деталь */
+      hasSel: !!sel,
+      selStatus: sel ? ST[sel.status].label : "",
+      selChipBg: sel ? ST[sel.status].bg : "#F0F0EC",
+      selChipFg: sel ? ST[sel.status].fg : "#6B7075",
+      selSum: sel ? money(sel.amount) : "",
+      selId: sel ? "статус бэка: " + sel.status : "",
+      selFields: sel ? [
+        { k: "Дата", v: sel.date },
+        { k: "Время", v: sel.time },
+        { k: "Банк-отправитель", v: sel.bank },
+        { k: "sender", v: String(sel.sender) },
+        { k: "Терминал", v: s.terminalName || s.terminal },
+        { k: "Точка", v: s.storeName || "—" }
+      ] : [],
+      selTrail: sel ? [
+        { name: "QR создан", time: sel.time, dot: "#9AA0A6" },
+        { name: "Клиент отсканировал", time: sel.time, dot: sel.status === "expired" ? "#E2E2DE" : "#9AA0A6" },
+        { name: ST[sel.status].label, time: sel.time, dot: ST[sel.status].dot }
+      ] : [],
+      recheckLabel: okSync ? "Обновить из /pos/history" : "Нет связи — повторить",
+      recheck: () => this.pollHistory(),
+      closeSel: () => this.setState({ selId: null }),
+      noSel: !sel,
+
+      /* вкладки и единый QR */
+      isHome: s.tab === "home", isHistory: s.tab === "history",
+      goHistory: () => this.setState({ tab: "history" }),
+      tabs: [
+        { name: "Главная", key: "home", radius: "4px" },
+        { name: "История", key: "history", radius: "9px" }
+      ].map((t) => ({
+        name: t.name, radius: t.radius,
+        bg: s.tab === t.key ? "#FDECEC" : "transparent",
+        fg: s.tab === t.key ? "#D6202A" : "#9AA0A6",
+        pick: () => this.setState({ tab: t.key, selId: null })
+      })),
+      qr: cellsQr,
+      merchant: s.storeName || "Кафе «Рохат»",
+      merchantId: "терминал " + (s.terminalName || "—") + " · +" + (s.terminalPhone || this.fullPhone()),
+      qrPayload: s.terminalQR || (this.base() ? "ждём terminalQR с сервера" : "статический QR терминала"),
+      todaySum: money(okTotal),
+      todayCount: String(s.ops.filter((o) => o.status === "success").length),
+      lastPayStr: last ? bankName(last.sender) + " · " + last.time : "платежей ещё нет",
+      lastPaySum: last ? "+" + money(last.amount) : "—",
+      goHome: () => this.setState({ tab: "home" }),
+      logout: () => this.logout()
+    };
+  }
+}
+
+</script>
+</body>
+</html>

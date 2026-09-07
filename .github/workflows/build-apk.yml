@@ -1,0 +1,89 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apk
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install deps
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Copy web assets
+        run: npx cap sync android
+
+      # иконка приложения из логотипа (все mipmap-плотности)
+      - name: App icon
+        run: |
+          sudo apt-get update && sudo apt-get install -y imagemagick
+          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            dir=${d%%:*}; px=${d##*:}
+            mkdir -p android/app/src/main/res/mipmap-$dir
+            convert ../../assets/activbank-qr-app.png -resize ${px}x${px} \
+              android/app/src/main/res/mipmap-$dir/ic_launcher.png
+            cp android/app/src/main/res/mipmap-$dir/ic_launcher.png \
+              android/app/src/main/res/mipmap-$dir/ic_launcher_round.png
+            cp android/app/src/main/res/mipmap-$dir/ic_launcher.png \
+              android/app/src/main/res/mipmap-$dir/ic_launcher_foreground.png
+          done
+
+      # POS-режим: не гасить экран, только портрет, разрешить http к бэкенду
+      - name: Patch manifest
+        run: |
+          m=android/app/src/main/AndroidManifest.xml
+          sed -i 's|android:name="MainActivity"|android:name="MainActivity" android:keepScreenOn="true" android:screenOrientation="portrait"|' $m
+          grep -q usesCleartextTraffic $m || sed -i 's|<application |<application android:usesCleartextTraffic="true" |' $m
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+        working-directory: apk/android
+
+      - name: Build release APK (signed if secrets present)
+        working-directory: apk/android
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > app/release.keystore
+            ./gradlew assembleRelease \
+              -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
+              -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+              -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+              -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          else
+            ./gradlew assembleRelease || true
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: activbank-qr-apk
+          path: |
+            apk/android/app/build/outputs/apk/debug/*.apk
+            apk/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
